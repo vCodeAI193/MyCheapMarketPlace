@@ -21,12 +21,32 @@ export interface Product {
   slug: string
   description: string
   price: number
+  salePrice?: number | null
+  saleEndsAt?: string | null
   stock: number
   images: string[]
   categoryId: string
   category?: Category
   isActive: boolean
   createdAt: string
+  avgRating?: number
+  reviewCount?: number
+}
+
+export interface Review {
+  id: string
+  userId: string
+  productId: string
+  rating: number
+  comment?: string | null
+  createdAt: string
+  user?: { id: string; name?: string | null }
+}
+
+export interface ReviewsResponse {
+  reviews: Review[]
+  avgRating: number
+  count: number
 }
 
 export interface CartItem {

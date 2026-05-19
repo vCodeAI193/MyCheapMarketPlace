@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useCartStore } from '@/store/cart'
 import { useAuthStore } from '@/store/auth'
 import { ShoppingCartIcon, UserIcon } from './Icons'
+import { SearchBar } from './SearchBar'
 
 export function Navbar() {
   const itemCount = useCartStore((s) => s.itemCount())
@@ -17,10 +18,11 @@ export function Navbar() {
             MyCheapMarketPlace
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
+          <div className="hidden md:flex items-center gap-4">
+            <Link href="/products" className="text-gray-600 hover:text-gray-900 transition-colors text-sm">
               Alle Produkte
             </Link>
+            <SearchBar />
           </div>
 
           <div className="flex items-center gap-3">

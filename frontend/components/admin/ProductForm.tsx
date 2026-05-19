@@ -20,6 +20,8 @@ export function ProductForm({ product }: Props) {
     slug: product?.slug ?? '',
     description: product?.description ?? '',
     price: product?.price ? String(product.price) : '',
+    salePrice: product?.salePrice ? String(product.salePrice) : '',
+    saleEndsAt: product?.saleEndsAt ? new Date(product.saleEndsAt).toISOString().slice(0, 16) : '',
     stock: product?.stock ? String(product.stock) : '0',
     categoryId: product?.categoryId ?? '',
     isActive: product?.isActive ?? true,
@@ -85,6 +87,15 @@ export function ProductForm({ product }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <Input label="Preis (€)" type="number" step="0.01" min="0" value={form.price} onChange={set('price')} required />
         <Input label="Lagerbestand" type="number" min="0" value={form.stock} onChange={set('stock')} required />
+      </div>
+
+      <div className="border rounded-lg p-4 space-y-4 bg-red-50 border-red-100">
+        <p className="text-sm font-semibold text-red-700">Flash Sale (optional)</p>
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Sale-Preis (€)" type="number" step="0.01" min="0" value={form.salePrice} onChange={set('salePrice')} placeholder="z.B. 14.99" />
+          <Input label="Sale endet am" type="datetime-local" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
+        </div>
+        <p className="text-xs text-red-500">Beide Felder ausfüllen um einen Sale zu aktivieren. Leer lassen um keinen Sale zu setzen.</p>
       </div>
 
       <div>

@@ -9,6 +9,7 @@ import cartRouter from './routes/cart'
 import ordersRouter from './routes/orders'
 import paymentsRouter from './routes/payments'
 import adminRouter from './routes/admin'
+import reviewsRouter from './routes/reviews'
 
 const app = express()
 
@@ -26,6 +27,8 @@ app.use('/api/cart', cartRouter)
 app.use('/api/orders', ordersRouter)
 app.use('/api/payments', paymentsRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/products/:id/reviews', reviewsRouter)
+app.use('/api/reviews', reviewsRouter)
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 

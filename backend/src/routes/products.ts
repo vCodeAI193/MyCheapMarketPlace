@@ -3,7 +3,8 @@ import multer from 'multer'
 import path from 'path'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/auth'
+import { sendMail } from '../lib/mailer'
+import { authenticate, AuthRequest } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
 import { validate } from '../middleware/validate'
 
@@ -22,17 +23,36 @@ const productSchema = z.object({
   slug: z.string().min(2).regex(/^[a-z0-9-]+$/),
   description: z.string().min(10),
   price: z.coerce.number().positive(),
+  salePrice: z.coerce.number().positive().optional().nullable(),
+  saleEndsAt: z.string().datetime().optional().nullable(),
   stock: z.coerce.number().int().min(0),
   categoryId: z.string(),
   isActive: z.coerce.boolean().optional(),
 })
 
+// Autocomplete — must be before /:slug
+router.get('/autocomplete', async (req, res) => {
+  const q = (req.query.q as string ?? '').trim()
+  if (!q) return res.json([])
+  const results = await prisma.product.findMany({
+    where: { isActive: true, name: { contains: q, mode: 'insensitive' } },
+    select: { id: true, name: true, slug: true, images: true, price: true, salePrice: true },
+    take: 6,
+    orderBy: { name: 'asc' },
+  })
+  res.json(results)
+})
+
 router.get('/', async (req, res) => {
-  const { q, categoryId, minPrice, maxPrice, page = '1', limit = '12', sort = 'createdAt' } = req.query
+  const { q, categoryId, minPrice, maxPrice, onSale, page = '1', limit = '12', sort = 'createdAt' } = req.query
 
   const where: Record<string, unknown> = { isActive: true }
   if (q) where.name = { contains: q as string, mode: 'insensitive' }
   if (categoryId) where.categoryId = categoryId as string
+  if (onSale === 'true') {
+    where.salePrice = { not: null }
+    where.saleEndsAt = { gt: new Date() }
+  }
   if (minPrice || maxPrice) {
     where.price = {}
     if (minPrice) (where.price as Record<string, unknown>).gte = Number(minPrice)
@@ -62,12 +82,7 @@ router.get('/', async (req, res) => {
     prisma.product.count({ where }),
   ])
 
-  res.json({
-    items,
-    total,
-    page: pageNum,
-    totalPages: Math.ceil(total / limitNum),
-  })
+  res.json({ items, total, page: pageNum, totalPages: Math.ceil(total / limitNum) })
 })
 
 router.get('/:slug', async (req, res) => {
@@ -114,6 +129,22 @@ router.put(
       data.images = files.map((f) => `/uploads/${f.filename}`)
     }
 
+    // Check stock-alert trigger: was 0, now > 0
+    if (typeof data.stock === 'number' && data.stock > 0) {
+      const current = await prisma.product.findUnique({ where: { id: req.params.id }, select: { stock: true, name: true } })
+      if (current && current.stock === 0) {
+        const alerts = await prisma.stockAlert.findMany({ where: { productId: req.params.id } })
+        for (const alert of alerts) {
+          await sendMail(
+            alert.email,
+            `"${current.name}" ist wieder verfügbar!`,
+            `<p>Gute Neuigkeiten! Das Produkt <strong>${current.name}</strong> ist wieder auf Lager.</p><p><a href="${process.env.FRONTEND_URL}/products/${req.params.id}">Jetzt kaufen</a></p>`
+          )
+        }
+        await prisma.stockAlert.deleteMany({ where: { productId: req.params.id } })
+      }
+    }
+
     const product = await prisma.product.update({
       where: { id: req.params.id },
       data,
@@ -124,11 +155,22 @@ router.put(
 )
 
 router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
-  await prisma.product.update({
-    where: { id: req.params.id },
-    data: { isActive: false },
-  })
+  await prisma.product.update({ where: { id: req.params.id }, data: { isActive: false } })
   res.json({ message: 'Produkt deaktiviert' })
+})
+
+// Stock alert registration
+router.post('/:id/stock-alert', async (req, res) => {
+  const { email } = req.body
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' })
+  }
+  try {
+    await prisma.stockAlert.create({ data: { email, productId: req.params.id } })
+  } catch {
+    // unique constraint — already registered
+  }
+  res.json({ message: 'Wir benachrichtigen dich, sobald das Produkt wieder verfügbar ist.' })
 })
 
 export default router

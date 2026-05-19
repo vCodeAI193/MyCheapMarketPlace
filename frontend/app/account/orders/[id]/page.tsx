@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { api } from '@/lib/api'
 import { Order } from '@/types'
 import { CheckIcon } from '@/components/shop/Icons'
+import { OrderTimeline } from '@/components/shop/OrderTimeline'
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Ausstehend', PAID: 'Bezahlt', SHIPPED: 'Versendet',
@@ -41,12 +42,11 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Bestellung #{order.id.slice(-8).toUpperCase()}</h1>
-        <span className="text-sm font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
-          {STATUS_LABELS[order.status]}
-        </span>
       </div>
+
+      <OrderTimeline status={order.status} />
 
       <div className="card p-6 mb-4">
         <h3 className="font-semibold mb-3">Artikel</h3>

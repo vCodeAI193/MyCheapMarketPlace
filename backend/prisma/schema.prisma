@@ -21,16 +21,17 @@ enum OrderStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  orders       Order[]
-  cart         Cart?
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  cart          Cart?
   refreshTokens RefreshToken[]
+  reviews       Review[]
 }
 
 model RefreshToken {
@@ -53,20 +54,24 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
-  slug        String      @unique
+  slug        String       @unique
   description String
-  price       Decimal     @db.Decimal(10, 2)
-  stock       Int         @default(0)
+  price       Decimal      @db.Decimal(10, 2)
+  salePrice   Decimal?     @db.Decimal(10, 2)
+  saleEndsAt  DateTime?
+  stock       Int          @default(0)
   images      String[]
   categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  category    Category     @relation(fields: [categoryId], references: [id])
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   orderItems  OrderItem[]
   cartItems   CartItem[]
+  reviews     Review[]
+  stockAlerts StockAlert[]
 }
 
 model Cart {
@@ -110,4 +115,27 @@ model OrderItem {
   price     Decimal @db.Decimal(10, 2)
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model StockAlert {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([email, productId])
 }

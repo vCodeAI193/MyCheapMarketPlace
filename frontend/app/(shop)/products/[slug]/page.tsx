@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Product } from '@/types'
 import { AddToCartButton } from '@/components/shop/AddToCartButton'
+import { ReviewList } from '@/components/shop/ReviewList'
+import { StockAlertForm } from '@/components/shop/StockAlertForm'
+import { SaleBadge } from '@/components/shop/SaleBadge'
+import { CountdownTimer } from '@/components/shop/CountdownTimer'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -20,6 +24,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   if (!product) notFound()
 
   const inStock = product.stock > 0
+  const onSale = product.salePrice != null && product.saleEndsAt != null && new Date(product.saleEndsAt) > new Date()
+  const displayPrice = onSale ? product.salePrice! : product.price
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -28,15 +34,14 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         <div className="space-y-3">
           <div className="aspect-square relative rounded-2xl overflow-hidden bg-gray-100 shadow">
             {product.images[0] ? (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-              />
+              <Image src={product.images[0]} alt={product.name} fill className="object-cover" priority />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">📦</div>
+            )}
+            {onSale && (
+              <div className="absolute top-3 left-3">
+                <SaleBadge originalPrice={Number(product.price)} salePrice={Number(product.salePrice)} />
+              </div>
             )}
           </div>
           {product.images.length > 1 && (
@@ -57,9 +62,22 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             <h1 className="text-3xl font-extrabold text-gray-900">{product.name}</h1>
           </div>
 
-          <p className="text-4xl font-bold text-primary-600">
-            {Number(product.price).toFixed(2)} €
-          </p>
+          {/* Price */}
+          <div className="flex items-baseline gap-3">
+            <p className="text-4xl font-bold text-primary-600">
+              {Number(displayPrice).toFixed(2)} €
+            </p>
+            {onSale && (
+              <p className="text-xl text-gray-400 line-through">
+                {Number(product.price).toFixed(2)} €
+              </p>
+            )}
+          </div>
+
+          {/* Sale countdown */}
+          {onSale && product.saleEndsAt && (
+            <CountdownTimer endsAt={product.saleEndsAt} />
+          )}
 
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -71,7 +89,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
           <p className="text-gray-600 leading-relaxed">{product.description}</p>
 
-          <AddToCartButton product={product} disabled={!inStock} />
+          {inStock ? (
+            <AddToCartButton product={product} />
+          ) : (
+            <StockAlertForm productId={product.id} />
+          )}
 
           <div className="border-t pt-4 grid grid-cols-2 gap-3 text-sm text-gray-500">
             <div className="flex items-center gap-2">🚚 Versand in 1–3 Tagen</div>
@@ -81,6 +103,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           </div>
         </div>
       </div>
+
+      {/* Reviews */}
+      <ReviewList productId={product.id} />
     </div>
   )
 }
