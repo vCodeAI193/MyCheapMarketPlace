@@ -4,6 +4,7 @@ import { Product } from '@/types'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
 import { CheckIcon } from './Icons'
+import { SUCCESS_TIMEOUT_MS } from '@/lib/constants'
 
 interface Props {
   product: Product
@@ -19,7 +20,7 @@ export function AddToCartButton({ product, disabled }: Props) {
     addItem(product, quantity)
     openCart()
     setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
+    setTimeout(() => setAdded(false), SUCCESS_TIMEOUT_MS)
   }
 
   return (

@@ -7,10 +7,6 @@ import { Order } from '@/types'
 import { CheckIcon } from '@/components/shop/Icons'
 import { OrderTimeline } from '@/components/shop/OrderTimeline'
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Ausstehend', PAID: 'Bezahlt', SHIPPED: 'Versendet',
-  DELIVERED: 'Geliefert', CANCELLED: 'Storniert',
-}
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams()

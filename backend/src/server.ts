@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 
+import { ApiError } from './lib/errors'
 import authRouter from './routes/auth'
 import categoriesRouter from './routes/categories'
 import productsRouter from './routes/products'
@@ -35,6 +36,15 @@ app.use('/api/coupons', couponsRouter)
 app.use('/api/wishlist', wishlistRouter)
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
+
+// Global error handler — must be last middleware
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof ApiError) {
+    return res.status(err.status).json({ error: err.message })
+  }
+  console.error('Unhandled error:', err)
+  res.status(500).json({ error: 'Interner Serverfehler' })
+})
 
 const PORT = Number(process.env.PORT) || 4000
 app.listen(PORT, () => console.log(`Backend läuft auf Port ${PORT}`))

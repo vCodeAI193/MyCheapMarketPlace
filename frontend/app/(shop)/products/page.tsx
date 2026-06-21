@@ -3,14 +3,14 @@ import Link from 'next/link'
 import { ProductCard } from '@/components/shop/ProductCard'
 import { ProductFilters } from '@/components/shop/ProductFilters'
 import { Product, Category, ProductsResponse } from '@/types'
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+import { API_BASE_URL } from '@/lib/api'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 async function getProducts(searchParams: Record<string, string>): Promise<ProductsResponse> {
   const params = new URLSearchParams(searchParams)
-  if (!params.get('limit')) params.set('limit', '12')
+  if (!params.get('limit')) params.set('limit', String(DEFAULT_PAGE_SIZE))
   try {
-    const res = await fetch(`${API}/api/products?${params}`, { cache: 'no-store' })
+    const res = await fetch(`${API_BASE_URL}/api/products?${params}`, { cache: 'no-store' })
     return res.json()
   } catch {
     return { items: [], total: 0, page: 1, totalPages: 1 }
@@ -19,7 +19,7 @@ async function getProducts(searchParams: Record<string, string>): Promise<Produc
 
 async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch(`${API}/api/categories/all`, { next: { revalidate: 300 } })
+    const res = await fetch(`${API_BASE_URL}/api/categories/all`, { next: { revalidate: 300 } })
     return res.json()
   } catch {
     return []

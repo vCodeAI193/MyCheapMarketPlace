@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
+import { PAGINATION } from '../lib/constants'
 
 const router = Router()
 
@@ -19,7 +20,7 @@ router.get('/stats', async (_req, res) => {
   ])
 
   const recentOrders = await prisma.order.findMany({
-    take: 5,
+    take: PAGINATION.RECENT_ORDERS,
     orderBy: { createdAt: 'desc' },
     include: {
       user: { select: { email: true, name: true } },
@@ -64,7 +65,7 @@ router.put('/users/:id', async (req, res) => {
 // Revenue by day (last 30 days)
 router.get('/revenue-chart', async (_req, res) => {
   const since = new Date()
-  since.setDate(since.getDate() - 29)
+  since.setDate(since.getDate() - (PAGINATION.REVENUE_DAYS - 1))
   since.setHours(0, 0, 0, 0)
 
   const orders = await prisma.order.findMany({
@@ -73,7 +74,7 @@ router.get('/revenue-chart', async (_req, res) => {
   })
 
   const byDay: Record<string, number> = {}
-  for (let d = 0; d < 30; d++) {
+  for (let d = 0; d < PAGINATION.REVENUE_DAYS; d++) {
     const dt = new Date(since)
     dt.setDate(dt.getDate() + d)
     byDay[dt.toISOString().slice(0, 10)] = 0

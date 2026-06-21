@@ -6,6 +6,7 @@ import { sendMail } from '../lib/mailer'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
 import { validate } from '../middleware/validate'
+import { calculateCouponDiscount } from '../lib/couponUtils'
 
 const router = Router()
 
@@ -70,11 +71,7 @@ router.post('/', authenticate, validate(createOrderSchema), async (req: AuthRequ
   if (couponCode) {
     coupon = await prisma.coupon.findUnique({ where: { code: couponCode.toUpperCase() } })
     if (coupon && coupon.isActive) {
-      discount = coupon.type === 'PERCENT'
-        ? (subtotal * Number(coupon.value)) / 100
-        : Math.min(Number(coupon.value), subtotal)
-      discount = Math.round(discount * 100) / 100
-      await prisma.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } })
+      discount = calculateCouponDiscount(coupon, subtotal)
     }
   }
 
@@ -86,32 +83,42 @@ router.post('/', authenticate, validate(createOrderSchema), async (req: AuthRequ
     metadata: { userId: req.userId! },
   })
 
-  const order = await prisma.order.create({
-    data: {
-      userId: req.userId!,
-      shippingAddress,
-      total,
-      discount: discount > 0 ? discount : null,
-      couponId: coupon?.id,
-      stripePaymentId: paymentIntent.id,
-      items: {
-        create: cart.items.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.product.price,
-        })),
-      },
-    },
-    include: { items: { include: { product: { select: { name: true } } } } },
-  })
+  // Create order + decrement stock + increment coupon usage atomically
+  const [order] = await prisma.$transaction(async (tx) => {
+    if (coupon) {
+      await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } })
+    }
 
-  // Reserve stock
-  for (const item of cart.items) {
-    await prisma.product.update({
-      where: { id: item.productId },
-      data: { stock: { decrement: item.quantity } },
+    const created = await tx.order.create({
+      data: {
+        userId: req.userId!,
+        shippingAddress,
+        total,
+        discount: discount > 0 ? discount : null,
+        couponId: coupon?.id,
+        stripePaymentId: paymentIntent.id,
+        items: {
+          create: cart.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+        },
+      },
+      include: { items: { include: { product: { select: { name: true } } } } },
     })
-  }
+
+    await Promise.all(
+      cart.items.map((item) =>
+        tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      )
+    )
+
+    return [created]
+  })
 
   // Send confirmation email
   const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { email: true, name: true } })

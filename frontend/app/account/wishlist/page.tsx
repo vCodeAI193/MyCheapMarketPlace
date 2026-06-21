@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { WishlistItem } from '@/types'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
+import { AccountTabs } from '@/components/shop/AccountTabs'
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishlistItem[]>([])
@@ -31,11 +32,7 @@ export default function WishlistPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold mb-8">Meine Wunschliste</h1>
 
-      <div className="flex gap-4 mb-8">
-        <Link href="/account" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Profil</Link>
-        <Link href="/account/orders" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Bestellungen</Link>
-        <Link href="/account/wishlist" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Wunschliste</Link>
-      </div>
+      <AccountTabs active="wishlist" />
 
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-pulse">

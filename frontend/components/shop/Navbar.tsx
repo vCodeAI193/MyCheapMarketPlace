@@ -4,6 +4,7 @@ import { useCartStore } from '@/store/cart'
 import { useAuthStore } from '@/store/auth'
 import { ShoppingCartIcon, UserIcon } from './Icons'
 import { SearchBar } from './SearchBar'
+import { CART_BADGE_MAX } from '@/lib/constants'
 
 export function Navbar() {
   const itemCount = useCartStore((s) => s.itemCount())
@@ -34,7 +35,7 @@ export function Navbar() {
               <ShoppingCartIcon className="w-6 h-6" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  {itemCount > 9 ? '9+' : itemCount}
+                  {itemCount > CART_BADGE_MAX ? `${CART_BADGE_MAX}+` : itemCount}
                 </span>
               )}
             </button>

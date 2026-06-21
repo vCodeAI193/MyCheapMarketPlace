@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { api } from '@/lib/api'
 import { logout } from '@/lib/auth'
-import Link from 'next/link'
+import { AccountTabs } from '@/components/shop/AccountTabs'
+import { SUCCESS_TIMEOUT_MS } from '@/lib/constants'
 
 export default function AccountPage() {
   const { user, setUser } = useAuthStore()
@@ -24,7 +25,7 @@ export default function AccountPage() {
       const updated = await api.put<typeof user>('/api/auth/me', { name })
       setUser(updated)
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      setTimeout(() => setSaved(false), SUCCESS_TIMEOUT_MS)
     } finally {
       setLoading(false)
     }
@@ -40,11 +41,7 @@ export default function AccountPage() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold mb-8">Mein Konto</h1>
 
-      <div className="flex gap-4 mb-8">
-        <Link href="/account" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Profil</Link>
-        <Link href="/account/orders" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Bestellungen</Link>
-        <Link href="/account/wishlist" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Wunschliste</Link>
-      </div>
+      <AccountTabs active="profile" />
 
       <div className="card p-6">
         <h2 className="font-semibold text-lg mb-4">Profildetails</h2>

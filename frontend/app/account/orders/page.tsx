@@ -3,14 +3,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { Order } from '@/types'
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  PENDING:   { label: 'Ausstehend',  color: 'bg-yellow-100 text-yellow-700' },
-  PAID:      { label: 'Bezahlt',     color: 'bg-blue-100 text-blue-700' },
-  SHIPPED:   { label: 'Versendet',   color: 'bg-indigo-100 text-indigo-700' },
-  DELIVERED: { label: 'Geliefert',   color: 'bg-green-100 text-green-700' },
-  CANCELLED: { label: 'Storniert',   color: 'bg-red-100 text-red-700' },
-}
+import { ORDER_STATUS } from '@/lib/order-status'
+import { AccountTabs } from '@/components/shop/AccountTabs'
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -27,11 +21,7 @@ export default function OrdersPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold mb-8">Meine Bestellungen</h1>
 
-      <div className="flex gap-4 mb-8">
-        <Link href="/account" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Profil</Link>
-        <Link href="/account/orders" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Bestellungen</Link>
-        <Link href="/account/wishlist" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Wunschliste</Link>
-      </div>
+      <AccountTabs active="orders" />
 
       {loading ? (
         <div className="space-y-4">
@@ -50,7 +40,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => {
-            const s = STATUS_LABELS[order.status] ?? STATUS_LABELS.PENDING
+            const s = ORDER_STATUS[order.status] ?? ORDER_STATUS.PENDING
             return (
               <div key={order.id} className="card p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">

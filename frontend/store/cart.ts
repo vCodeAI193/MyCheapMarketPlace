@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { CartItem, Product } from '@/types'
+import { CART_ID_PREFIX } from '@/lib/constants'
 
 interface CartStore {
   items: CartItem[]
@@ -38,8 +39,8 @@ export const useCartStore = create<CartStore>()(
             items: [
               ...items,
               {
-                id: `local-${product.id}`,
-                cartId: 'local',
+                id: `${CART_ID_PREFIX}-${product.id}`,
+                cartId: CART_ID_PREFIX,
                 productId: product.id,
                 quantity,
                 product,

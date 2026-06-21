@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
 import { SaleBadge } from './SaleBadge'
 import { StarRating } from './StarRating'
+import { LOW_STOCK_THRESHOLD } from '@/lib/constants'
 
 interface Props {
   product: Product
@@ -69,7 +70,7 @@ export function ProductCard({ product }: Props) {
             {product.stock === 0 ? 'Ausverkauft' : 'Kaufen'}
           </Button>
         </div>
-        {product.stock > 0 && product.stock < 5 && (
+        {product.stock > 0 && product.stock < LOW_STOCK_THRESHOLD && (
           <p className="text-xs text-orange-600 mt-1">Nur noch {product.stock} verfügbar</p>
         )}
       </div>

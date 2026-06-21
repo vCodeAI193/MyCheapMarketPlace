@@ -7,6 +7,7 @@ import { prisma } from '../lib/prisma'
 import { sendMail } from '../lib/mailer'
 import { validate } from '../middleware/validate'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { TOKEN_EXPIRY } from '../lib/constants'
 
 const router = Router()
 
@@ -23,10 +24,10 @@ const loginSchema = z.object({
 
 function signTokens(userId: string, role: string) {
   const accessToken = jwt.sign({ userId, role }, process.env.JWT_SECRET!, {
-    expiresIn: '15m',
+    expiresIn: TOKEN_EXPIRY.ACCESS,
   })
   const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET!, {
-    expiresIn: '7d',
+    expiresIn: TOKEN_EXPIRY.REFRESH,
   })
   return { accessToken, refreshToken }
 }
@@ -47,7 +48,7 @@ router.post('/register', validate(registerSchema), async (req, res) => {
     data: {
       token: refreshToken,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + TOKEN_EXPIRY.REFRESH_MS),
     },
   })
 
@@ -67,7 +68,7 @@ router.post('/login', validate(loginSchema), async (req, res) => {
     data: {
       token: refreshToken,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + TOKEN_EXPIRY.REFRESH_MS),
     },
   })
 
@@ -99,7 +100,7 @@ router.post('/refresh', async (req, res) => {
       data: {
         token: tokens.refreshToken,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + TOKEN_EXPIRY.REFRESH_MS),
       },
     })
 
@@ -150,7 +151,7 @@ router.post('/forgot-password', async (req, res) => {
     data: {
       token,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      expiresAt: new Date(Date.now() + TOKEN_EXPIRY.PASSWORD_RESET_MS),
     },
   })
 

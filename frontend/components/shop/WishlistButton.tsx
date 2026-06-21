@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function WishlistButton({ productId }: Props) {
+  const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const [wished, setWished] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -20,7 +22,7 @@ export function WishlistButton({ productId }: Props) {
   }, [user, productId])
 
   async function toggle() {
-    if (!user) { window.location.href = '/auth/login'; return }
+    if (!user) { router.push('/auth/login'); return }
     setLoading(true)
     try {
       if (wished) {

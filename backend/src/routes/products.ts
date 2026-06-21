@@ -7,6 +7,7 @@ import { sendMail } from '../lib/mailer'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
 import { validate } from '../middleware/validate'
+import { PAGINATION, UPLOAD } from '../lib/constants'
 
 const router = Router()
 
@@ -16,7 +17,7 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`)
   },
 })
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } })
+const upload = multer({ storage, limits: { fileSize: UPLOAD.MAX_FILE_SIZE } })
 
 const productSchema = z.object({
   name: z.string().min(2),
@@ -37,14 +38,14 @@ router.get('/autocomplete', async (req, res) => {
   const results = await prisma.product.findMany({
     where: { isActive: true, name: { contains: q, mode: 'insensitive' } },
     select: { id: true, name: true, slug: true, images: true, price: true, salePrice: true },
-    take: 6,
+    take: PAGINATION.AUTOCOMPLETE_LIMIT,
     orderBy: { name: 'asc' },
   })
   res.json(results)
 })
 
 router.get('/', async (req, res) => {
-  const { q, categoryId, minPrice, maxPrice, onSale, page = '1', limit = '12', sort = 'createdAt' } = req.query
+  const { q, categoryId, minPrice, maxPrice, onSale, page = '1', limit = String(PAGINATION.DEFAULT_LIMIT), sort = 'createdAt' } = req.query
 
   const where: Record<string, unknown> = { isActive: true }
   if (q) where.name = { contains: q as string, mode: 'insensitive' }
@@ -60,7 +61,7 @@ router.get('/', async (req, res) => {
   }
 
   const pageNum = Math.max(1, Number(page))
-  const limitNum = Math.min(50, Math.max(1, Number(limit)))
+  const limitNum = Math.min(PAGINATION.MAX_LIMIT, Math.max(1, Number(limit)))
   const skip = (pageNum - 1) * limitNum
 
   const validSorts: Record<string, unknown> = {
@@ -98,7 +99,7 @@ router.post(
   '/',
   authenticate,
   requireAdmin,
-  upload.array('images', 5),
+  upload.array('images', UPLOAD.MAX_FILES),
   async (req, res) => {
     const parsed = productSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
@@ -118,7 +119,7 @@ router.put(
   '/:id',
   authenticate,
   requireAdmin,
-  upload.array('images', 5),
+  upload.array('images', UPLOAD.MAX_FILES),
   async (req, res) => {
     const parsed = productSchema.partial().safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })

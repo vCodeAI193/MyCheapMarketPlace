@@ -10,12 +10,11 @@ import { CountdownTimer } from '@/components/shop/CountdownTimer'
 import { WishlistButton } from '@/components/shop/WishlistButton'
 import { RecentlyViewed } from '@/components/shop/RecentlyViewed'
 import { TrackProductView } from '@/components/shop/TrackProductView'
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+import { API_BASE_URL } from '@/lib/api'
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API}/api/products/${slug}`, { next: { revalidate: 60 } })
+    const res = await fetch(`${API_BASE_URL}/api/products/${slug}`, { next: { revalidate: 60 } })
     if (!res.ok) return null
     return res.json()
   } catch {

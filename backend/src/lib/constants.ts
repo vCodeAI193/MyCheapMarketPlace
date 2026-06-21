@@ -1,0 +1,21 @@
+export const TOKEN_EXPIRY = {
+  ACCESS: '15m',
+  REFRESH: '7d',
+  REFRESH_MS: 7 * 24 * 60 * 60 * 1000,
+  PASSWORD_RESET_MS: 60 * 60 * 1000,
+}
+
+export const PAGINATION = {
+  DEFAULT_LIMIT: 12,
+  MAX_LIMIT: 50,
+  AUTOCOMPLETE_LIMIT: 6,
+  RECENT_ORDERS: 5,
+  REVENUE_DAYS: 30,
+}
+
+export const UPLOAD = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024,
+  MAX_FILES: 5,
+}
+
+export const LOW_STOCK_THRESHOLD = 5

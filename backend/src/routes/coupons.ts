@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
 import { validate } from '../middleware/validate'
+import { calculateCouponDiscount } from '../lib/couponUtils'
 
 const router = Router()
 
@@ -31,12 +32,9 @@ router.post('/validate', authenticate, async (req: AuthRequest, res) => {
     return res.status(400).json({ error: `Mindestbestellwert: ${Number(coupon.minOrderAmount).toFixed(2)} €` })
   }
 
-  const discount =
-    coupon.type === 'PERCENT'
-      ? (orderTotal * Number(coupon.value)) / 100
-      : Math.min(Number(coupon.value), orderTotal)
+  const discount = calculateCouponDiscount(coupon, orderTotal)
 
-  res.json({ coupon, discount: Math.round(discount * 100) / 100 })
+  res.json({ coupon, discount })
 })
 
 // Admin CRUD

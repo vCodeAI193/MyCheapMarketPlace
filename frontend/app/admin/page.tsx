@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import { Order } from '@/types'
+import { ORDER_STATUS } from '@/lib/order-status'
 
 interface Stats {
   totalProducts: number
@@ -14,14 +15,6 @@ interface Stats {
 interface RevenueDay {
   date: string
   revenue: number
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING:   'bg-yellow-100 text-yellow-700',
-  PAID:      'bg-blue-100 text-blue-700',
-  SHIPPED:   'bg-indigo-100 text-indigo-700',
-  DELIVERED: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-red-100 text-red-700',
 }
 
 function RevenueChart({ data }: { data: RevenueDay[] }) {
@@ -130,7 +123,7 @@ export default function AdminDashboard() {
                   <td className="py-3 pr-4">{order.user?.name ?? order.user?.email}</td>
                   <td className="py-3 pr-4 font-medium">{Number(order.total).toFixed(2)} €</td>
                   <td className="py-3">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] ?? ''}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ORDER_STATUS[order.status]?.color ?? ''}`}>
                       {order.status}
                     </span>
                   </td>
