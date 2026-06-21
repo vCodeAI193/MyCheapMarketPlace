@@ -30,6 +30,7 @@ export default function OrdersPage() {
       <div className="flex gap-4 mb-8">
         <Link href="/account" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Profil</Link>
         <Link href="/account/orders" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Bestellungen</Link>
+        <Link href="/account/wishlist" className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-primary-400">Wunschliste</Link>
       </div>
 
       {loading ? (

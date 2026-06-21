@@ -9,6 +9,13 @@ import { api } from '@/lib/api'
 import Image from 'next/image'
 import Link from 'next/link'
 
+interface CouponResult {
+  code: string
+  type: 'PERCENT' | 'FIXED'
+  value: number
+  discount: number
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, total, clearCart } = useCartStore()
@@ -18,6 +25,10 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', street: '', city: '', postalCode: '', country: 'Deutschland',
   })
+  const [couponCode, setCouponCode] = useState('')
+  const [coupon, setCoupon] = useState<CouponResult | null>(null)
+  const [couponError, setCouponError] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
 
   if (items.length === 0) {
     return (
@@ -40,6 +51,28 @@ export default function CheckoutPage() {
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  const subtotal = total()
+  const discount = coupon?.discount ?? 0
+  const finalTotal = Math.max(0, subtotal - discount)
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return
+    setCouponError('')
+    setCouponLoading(true)
+    try {
+      const result = await api.post<CouponResult>('/api/coupons/validate', {
+        code: couponCode.trim().toUpperCase(),
+        orderTotal: subtotal,
+      })
+      setCoupon(result)
+    } catch (err) {
+      setCouponError((err as Error).message)
+      setCoupon(null)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -52,7 +85,7 @@ export default function CheckoutPage() {
       const cartId = `local-${user!.id}`
       const { order } = await api.post<{ order: { id: string }; clientSecret: string }>(
         '/api/orders',
-        { shippingAddress: form, cartId }
+        { shippingAddress: form, cartId, couponCode: coupon?.code }
       )
       clearCart()
       router.push(`/account/orders/${order.id}?success=1`)
@@ -86,6 +119,28 @@ export default function CheckoutPage() {
           </div>
 
           <div className="card p-6">
+            <h2 className="font-semibold text-lg mb-4">Gutscheincode</h2>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="z.B. SOMMER10"
+                value={couponCode}
+                onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCoupon(null); setCouponError('') }}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <Button type="button" variant="outline" onClick={applyCoupon} loading={couponLoading}>
+                Einlösen
+              </Button>
+            </div>
+            {coupon && (
+              <p className="mt-2 text-sm text-green-600 font-medium">
+                ✓ Gutschein «{coupon.code}» angewendet — {discount.toFixed(2)} € Rabatt
+              </p>
+            )}
+            {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+          </div>
+
+          <div className="card p-6">
             <h2 className="font-semibold text-lg mb-4">Zahlung</h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
               <strong>Demo-Modus:</strong> Zahlung wird simuliert. In Produktion Stripe Elements hier einbinden.
@@ -96,7 +151,7 @@ export default function CheckoutPage() {
           {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</p>}
 
           <Button type="submit" size="lg" className="w-full" loading={loading}>
-            Jetzt kaufen — {total().toFixed(2)} €
+            Jetzt kaufen — {finalTotal.toFixed(2)} €
           </Button>
         </form>
 
@@ -124,13 +179,18 @@ export default function CheckoutPage() {
             </div>
             <div className="border-t pt-4 space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
-                <span>Zwischensumme</span><span>{total().toFixed(2)} €</span>
+                <span>Zwischensumme</span><span>{subtotal.toFixed(2)} €</span>
               </div>
+              {coupon && (
+                <div className="flex justify-between text-green-600">
+                  <span>Gutschein ({coupon.code})</span><span>−{discount.toFixed(2)} €</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>Versand</span><span className="text-green-600">Kostenlos</span>
               </div>
               <div className="flex justify-between font-bold text-base pt-2 border-t">
-                <span>Gesamt</span><span>{total().toFixed(2)} €</span>
+                <span>Gesamt</span><span>{finalTotal.toFixed(2)} €</span>
               </div>
             </div>
           </div>

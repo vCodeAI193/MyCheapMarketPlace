@@ -11,6 +11,11 @@ interface Stats {
   recentOrders: (Order & { user: { email: string; name?: string } })[]
 }
 
+interface RevenueDay {
+  date: string
+  revenue: number
+}
+
 const STATUS_COLORS: Record<string, string> = {
   PENDING:   'bg-yellow-100 text-yellow-700',
   PAID:      'bg-blue-100 text-blue-700',
@@ -19,15 +24,50 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-700',
 }
 
+function RevenueChart({ data }: { data: RevenueDay[] }) {
+  if (!data.length) return <p className="text-gray-400 text-sm">Keine Daten verfügbar.</p>
+
+  const max = Math.max(...data.map((d) => d.revenue), 1)
+
+  return (
+    <div className="w-full">
+      <div className="flex items-end gap-1 h-32">
+        {data.map((d) => {
+          const height = Math.round((d.revenue / max) * 100)
+          return (
+            <div key={d.date} className="flex-1 flex flex-col items-center group relative">
+              <div
+                className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
+                style={{ height: `${Math.max(height, 2)}%` }}
+              />
+              <div className="absolute bottom-full mb-1 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10">
+                {new Date(d.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}: {Number(d.revenue).toFixed(2)} €
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex justify-between text-xs text-gray-400 mt-1">
+        <span>{new Date(data[0].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
+        <span>{new Date(data[data.length - 1].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
+  const [revenue, setRevenue] = useState<RevenueDay[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<Stats>('/api/admin/stats')
-      .then(setStats)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    Promise.all([
+      api.get<Stats>('/api/admin/stats'),
+      api.get<RevenueDay[]>('/api/admin/revenue-chart').catch(() => []),
+    ]).then(([s, r]) => {
+      setStats(s)
+      setRevenue(r)
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   if (loading) {
@@ -52,7 +92,7 @@ export default function AdminDashboard() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((s) => (
           <div key={s.label} className="card p-6">
             <div className="flex items-center justify-between mb-2">
@@ -62,6 +102,11 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">{s.label}</p>
           </div>
         ))}
+      </div>
+
+      <div className="card p-6 mb-8">
+        <h2 className="font-semibold text-lg mb-4">Umsatz — letzte 30 Tage</h2>
+        <RevenueChart data={revenue} />
       </div>
 
       <div className="card p-6">

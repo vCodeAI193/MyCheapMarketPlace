@@ -9,6 +9,8 @@ const navItems = [
   { href: '/admin/products', label: '📦 Produkte' },
   { href: '/admin/categories', label: '🏷️ Kategorien' },
   { href: '/admin/orders', label: '🛒 Bestellungen' },
+  { href: '/admin/users', label: '👤 Benutzer' },
+  { href: '/admin/coupons', label: '🎟️ Gutscheine' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

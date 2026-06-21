@@ -10,6 +10,8 @@ import ordersRouter from './routes/orders'
 import paymentsRouter from './routes/payments'
 import adminRouter from './routes/admin'
 import reviewsRouter from './routes/reviews'
+import couponsRouter from './routes/coupons'
+import wishlistRouter from './routes/wishlist'
 
 const app = express()
 
@@ -29,6 +31,8 @@ app.use('/api/payments', paymentsRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/products/:id/reviews', reviewsRouter)
 app.use('/api/reviews', reviewsRouter)
+app.use('/api/coupons', couponsRouter)
+app.use('/api/wishlist', wishlistRouter)
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 

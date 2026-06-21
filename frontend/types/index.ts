@@ -86,11 +86,35 @@ export interface Order {
   userId: string
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
   total: number
+  discount?: number | null
+  couponId?: string | null
   shippingAddress: ShippingAddress
   stripePaymentId?: string | null
   items: OrderItem[]
   createdAt: string
   user?: Pick<User, 'id' | 'email' | 'name'>
+}
+
+export interface Coupon {
+  id: string
+  code: string
+  description?: string | null
+  type: 'PERCENT' | 'FIXED'
+  value: number
+  minOrderAmount?: number | null
+  maxUses?: number | null
+  usedCount: number
+  isActive: boolean
+  expiresAt?: string | null
+  createdAt: string
+}
+
+export interface WishlistItem {
+  id: string
+  userId: string
+  productId: string
+  createdAt: string
+  product: Product
 }
 
 export interface ProductsResponse {

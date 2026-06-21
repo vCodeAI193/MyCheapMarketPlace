@@ -39,7 +39,12 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-center mb-6">Anmelden</h1>
           <form onSubmit={submit} className="space-y-4">
             <Input label="E-Mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <Input label="Passwort" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <div>
+              <Input label="Passwort" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <div className="text-right mt-1">
+                <Link href="/auth/forgot-password" className="text-xs text-primary-600 hover:underline">Passwort vergessen?</Link>
+              </div>
+            </div>
             {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">{error}</p>}
             <Button type="submit" className="w-full" size="lg" loading={loading}>Anmelden</Button>
           </form>

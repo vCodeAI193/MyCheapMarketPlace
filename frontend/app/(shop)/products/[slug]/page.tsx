@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import { Product } from '@/types'
 import { AddToCartButton } from '@/components/shop/AddToCartButton'
 import { ReviewList } from '@/components/shop/ReviewList'
 import { StockAlertForm } from '@/components/shop/StockAlertForm'
 import { SaleBadge } from '@/components/shop/SaleBadge'
 import { CountdownTimer } from '@/components/shop/CountdownTimer'
+import { WishlistButton } from '@/components/shop/WishlistButton'
+import { RecentlyViewed } from '@/components/shop/RecentlyViewed'
+import { TrackProductView } from '@/components/shop/TrackProductView'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -19,6 +23,28 @@ async function getProduct(slug: string): Promise<Product | null> {
   }
 }
 
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const product = await getProduct(params.slug)
+  if (!product) return {}
+  const image = product.images[0]
+  return {
+    title: `${product.name} — MyCheapMarketPlace`,
+    description: product.description?.slice(0, 160),
+    openGraph: {
+      title: product.name,
+      description: product.description?.slice(0, 160),
+      images: image ? [{ url: image, width: 800, height: 800, alt: product.name }] : [],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: product.description?.slice(0, 160),
+      images: image ? [image] : [],
+    },
+  }
+}
+
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const product = await getProduct(params.slug)
   if (!product) notFound()
@@ -29,6 +55,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <TrackProductView product={product} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* Images */}
         <div className="space-y-3">
@@ -90,9 +118,15 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           <p className="text-gray-600 leading-relaxed">{product.description}</p>
 
           {inStock ? (
-            <AddToCartButton product={product} />
+            <div className="space-y-3">
+              <AddToCartButton product={product} />
+              <WishlistButton productId={product.id} />
+            </div>
           ) : (
-            <StockAlertForm productId={product.id} />
+            <div className="space-y-3">
+              <StockAlertForm productId={product.id} />
+              <WishlistButton productId={product.id} />
+            </div>
           )}
 
           <div className="border-t pt-4 grid grid-cols-2 gap-3 text-sm text-gray-500">
@@ -106,6 +140,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
       {/* Reviews */}
       <ReviewList productId={product.id} />
+
+      {/* Recently Viewed */}
+      <RecentlyViewed excludeId={product.id} />
     </div>
   )
 }

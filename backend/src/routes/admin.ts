@@ -45,10 +45,45 @@ router.get('/products', async (_req, res) => {
 
 router.get('/users', async (_req, res) => {
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, role: true, createdAt: true },
+    select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true, _count: { select: { orders: true } } },
     orderBy: { createdAt: 'desc' },
   })
   res.json(users)
+})
+
+router.put('/users/:id', async (req, res) => {
+  const { role, isActive } = req.body
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { ...(role ? { role } : {}), ...(isActive !== undefined ? { isActive } : {}) },
+    select: { id: true, email: true, name: true, role: true, isActive: true },
+  })
+  res.json(user)
+})
+
+// Revenue by day (last 30 days)
+router.get('/revenue-chart', async (_req, res) => {
+  const since = new Date()
+  since.setDate(since.getDate() - 29)
+  since.setHours(0, 0, 0, 0)
+
+  const orders = await prisma.order.findMany({
+    where: { createdAt: { gte: since }, status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] } },
+    select: { createdAt: true, total: true },
+  })
+
+  const byDay: Record<string, number> = {}
+  for (let d = 0; d < 30; d++) {
+    const dt = new Date(since)
+    dt.setDate(dt.getDate() + d)
+    byDay[dt.toISOString().slice(0, 10)] = 0
+  }
+  for (const o of orders) {
+    const key = o.createdAt.toISOString().slice(0, 10)
+    if (key in byDay) byDay[key] += Number(o.total)
+  }
+
+  res.json(Object.entries(byDay).map(([date, revenue]) => ({ date, revenue: Math.round(revenue * 100) / 100 })))
 })
 
 export default router

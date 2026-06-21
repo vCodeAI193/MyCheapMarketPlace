@@ -20,18 +20,35 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
   passwordHash  String
   name          String?
   role          Role           @default(USER)
+  isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   orders        Order[]
   cart          Cart?
   refreshTokens RefreshToken[]
   reviews       Review[]
+  wishlist      WishlistItem[]
+  passwordResets PasswordReset[]
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model RefreshToken {
@@ -54,24 +71,51 @@ model Category {
 }
 
 model Product {
-  id          String       @id @default(cuid())
-  name        String
-  slug        String       @unique
-  description String
-  price       Decimal      @db.Decimal(10, 2)
-  salePrice   Decimal?     @db.Decimal(10, 2)
-  saleEndsAt  DateTime?
-  stock       Int          @default(0)
-  images      String[]
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id])
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  orderItems  OrderItem[]
-  cartItems   CartItem[]
-  reviews     Review[]
-  stockAlerts StockAlert[]
+  id           String         @id @default(cuid())
+  name         String
+  slug         String         @unique
+  description  String
+  price        Decimal        @db.Decimal(10, 2)
+  salePrice    Decimal?       @db.Decimal(10, 2)
+  saleEndsAt   DateTime?
+  stock        Int            @default(0)
+  images       String[]
+  categoryId   String
+  category     Category       @relation(fields: [categoryId], references: [id])
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  reviews      Review[]
+  stockAlerts  StockAlert[]
+  wishlistItems WishlistItem[]
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Coupon {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  description  String?
+  type         DiscountType
+  value        Decimal      @db.Decimal(10, 2)
+  minOrderAmount Decimal?   @db.Decimal(10, 2)
+  maxUses      Int?
+  usedCount    Int          @default(0)
+  isActive     Boolean      @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime     @default(now())
+  orders       Order[]
 }
 
 model Cart {
@@ -100,6 +144,9 @@ model Order {
   user            User        @relation(fields: [userId], references: [id])
   status          OrderStatus @default(PENDING)
   total           Decimal     @db.Decimal(10, 2)
+  discount        Decimal?    @db.Decimal(10, 2)
+  couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
   shippingAddress Json
   stripePaymentId String?
   items           OrderItem[]

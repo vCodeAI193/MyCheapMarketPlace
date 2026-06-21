@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
+import { sendMail } from '../lib/mailer'
 import { validate } from '../middleware/validate'
 import { authenticate, AuthRequest } from '../middleware/auth'
 
@@ -132,6 +134,58 @@ router.post('/logout', authenticate, async (req: AuthRequest, res) => {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken, userId: req.userId } })
   }
   res.json({ message: 'Abgemeldet' })
+})
+
+// Passwort vergessen
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body
+  if (!email) return res.status(400).json({ error: 'E-Mail erforderlich' })
+
+  const user = await prisma.user.findUnique({ where: { email } })
+  // Always return 200 to avoid user enumeration
+  if (!user) return res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet.' })
+
+  const token = crypto.randomBytes(32).toString('hex')
+  await prisma.passwordReset.create({
+    data: {
+      token,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+    },
+  })
+
+  const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`
+  await sendMail(
+    email,
+    'Passwort zurücksetzen — MyCheapMarketPlace',
+    `<p>Hallo ${user.name ?? ''},</p>
+     <p>Klicke auf den folgenden Link um dein Passwort zurückzusetzen (gültig für 1 Stunde):</p>
+     <p><a href="${resetUrl}">${resetUrl}</a></p>
+     <p>Falls du diese Anfrage nicht gestellt hast, ignoriere diese E-Mail.</p>`
+  )
+
+  res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet.' })
+})
+
+// Passwort zurücksetzen
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body
+  if (!token || !password || password.length < 8) {
+    return res.status(400).json({ error: 'Token und Passwort (min. 8 Zeichen) erforderlich' })
+  }
+
+  const reset = await prisma.passwordReset.findUnique({ where: { token } })
+  if (!reset || reset.expiresAt < new Date()) {
+    return res.status(400).json({ error: 'Token ungültig oder abgelaufen' })
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12)
+  await prisma.user.update({ where: { id: reset.userId }, data: { passwordHash } })
+  await prisma.passwordReset.delete({ where: { token } })
+  // Invalidate all refresh tokens for security
+  await prisma.refreshToken.deleteMany({ where: { userId: reset.userId } })
+
+  res.json({ message: 'Passwort erfolgreich zurückgesetzt.' })
 })
 
 export default router
