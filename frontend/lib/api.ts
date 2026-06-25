@@ -15,11 +15,39 @@ function getHeaders(extra?: Record<string, string>): Record<string, string> {
   return headers
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function tryRefresh(): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return false
+  try {
+    const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+    if (!res.ok) throw new Error()
+    const { accessToken, refreshToken: newRefresh } = await res.json()
+    localStorage.setItem('accessToken', accessToken)
+    localStorage.setItem('refreshToken', newRefresh)
+    return true
+  } catch {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    return false
+  }
+}
+
+async function request<T>(path: string, options?: RequestInit & { __isRetry?: boolean }): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: { ...getHeaders(), ...(options?.headers as Record<string, string> | undefined) },
   })
+  if (res.status === 401 && !options?.__isRetry) {
+    const refreshed = await tryRefresh()
+    if (refreshed) {
+      return request<T>(path, { ...options, __isRetry: true })
+    }
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error(err.error ?? 'Anfrage fehlgeschlagen')

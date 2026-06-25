@@ -10,7 +10,7 @@ import { AccountTabs } from '@/components/shop/AccountTabs'
 import { SUCCESS_TIMEOUT_MS } from '@/lib/constants'
 
 export default function AccountPage() {
-  const { user, setUser } = useAuthStore()
+  const { user, setUser, logout: storeLogout } = useAuthStore()
   const router = useRouter()
   const [name, setName] = useState(user?.name ?? '')
   const [saved, setSaved] = useState(false)
@@ -33,7 +33,7 @@ export default function AccountPage() {
 
   async function handleLogout() {
     await logout()
-    setUser(null)
+    storeLogout()
     router.push('/')
   }
 

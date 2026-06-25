@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { ProductCard } from '@/components/shop/ProductCard'
 import { Product, Category } from '@/types'
+import { API_BASE_URL } from '@/lib/api'
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+const API = API_BASE_URL
 
 async function getFeaturedProducts(): Promise<Product[]> {
   try {

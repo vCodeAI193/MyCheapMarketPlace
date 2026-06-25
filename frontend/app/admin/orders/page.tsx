@@ -2,21 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import { Order } from '@/types'
-
-const STATUSES = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED']
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING:   'bg-yellow-100 text-yellow-700',
-  PAID:      'bg-blue-100 text-blue-700',
-  SHIPPED:   'bg-indigo-100 text-indigo-700',
-  DELIVERED: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-red-100 text-red-700',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Ausstehend', PAID: 'Bezahlt', SHIPPED: 'Versendet',
-  DELIVERED: 'Geliefert', CANCELLED: 'Storniert',
-}
+import { ORDER_STATUS, ORDER_STATUSES } from '@/lib/order-status'
 
 type AdminOrder = Order & { user: { email: string; name?: string } }
 
@@ -70,8 +56,8 @@ export default function AdminOrdersPage() {
                       value={order.status}
                       onChange={(e) => updateStatus(order.id, e.target.value)}
                     >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                      {ORDER_STATUSES.map((s) => (
+                        <option key={s} value={s}>{ORDER_STATUS[s]?.label}</option>
                       ))}
                     </select>
                   </td>

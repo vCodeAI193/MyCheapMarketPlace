@@ -184,7 +184,11 @@ router.get('/admin/export-csv', authenticate, requireAdmin, async (_req, res) =>
   res.send('﻿' + csv) // BOM for Excel UTF-8
 })
 
-router.put('/admin/:id/status', authenticate, requireAdmin, async (req, res) => {
+const updateStatusSchema = z.object({
+  status: z.enum(['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
+})
+
+router.put('/admin/:id/status', authenticate, requireAdmin, validate(updateStatusSchema), async (req, res) => {
   const { status } = req.body
   const order = await prisma.order.update({ where: { id: req.params.id }, data: { status } })
   res.json(order)

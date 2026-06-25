@@ -7,6 +7,7 @@ interface AuthStore {
   isLoading: boolean
   setUser: (user: User | null) => void
   setLoading: (v: boolean) => void
+  logout: () => void
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -14,4 +15,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isLoading: true,
   setUser: (user) => set({ user }),
   setLoading: (isLoading) => set({ isLoading }),
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+    }
+    set({ user: null })
+  },
 }))

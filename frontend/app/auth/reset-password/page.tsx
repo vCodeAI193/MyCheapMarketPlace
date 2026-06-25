@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { api } from '@/lib/api'
+import { SUCCESS_TIMEOUT_MS } from '@/lib/constants'
 
 export default function ResetPasswordPage() {
   const params = useSearchParams()
@@ -21,14 +23,9 @@ export default function ResetPasswordPage() {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      })
-      if (!res.ok) throw new Error((await res.json()).error)
+      await api.post('/api/auth/reset-password', { token, password })
       setDone(true)
-      setTimeout(() => router.push('/auth/login'), 2000)
+      setTimeout(() => router.push('/auth/login'), SUCCESS_TIMEOUT_MS)
     } catch (err) {
       setError((err as Error).message)
     } finally {

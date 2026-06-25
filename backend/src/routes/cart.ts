@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate, AuthRequest } from '../middleware/auth'
+import { authenticate, softAuthenticate, AuthRequest } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
 const router = Router()
@@ -29,20 +29,7 @@ router.get('/', async (req: AuthRequest, res) => {
   res.json(cart)
 })
 
-router.use(async (req: AuthRequest, _res, next) => {
-  const authHeader = req.headers.authorization
-  if (authHeader?.startsWith('Bearer ')) {
-    try {
-      const jwt = await import('jsonwebtoken')
-      const payload = jwt.default.verify(authHeader.slice(7), process.env.JWT_SECRET!) as {
-        userId: string; role: string
-      }
-      req.userId = payload.userId
-      req.userRole = payload.role
-    } catch { /* unauthenticated is fine */ }
-  }
-  next()
-})
+router.use(softAuthenticate)
 
 router.post('/items', validate(cartItemSchema), async (req: AuthRequest, res) => {
   const { productId, quantity } = req.body

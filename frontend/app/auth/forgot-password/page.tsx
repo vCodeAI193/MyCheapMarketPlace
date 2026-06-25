@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { api } from '@/lib/api'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -13,13 +14,10 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
+      await api.post('/api/auth/forgot-password', { email })
       setSent(true)
-    } finally {
+    } catch { /* backend always responds 200 — ignore network errors */ }
+    finally {
       setLoading(false)
     }
   }

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { api } from '@/lib/api'
 
 interface Props {
   productId: string
@@ -18,11 +19,7 @@ export function StockAlertForm({ productId }: Props) {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/api/products/${productId}/stock-alert`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }
-      )
-      if (!res.ok) throw new Error((await res.json()).error)
+      await api.post(`/api/products/${productId}/stock-alert`, { email })
       setSent(true)
     } catch (err) {
       setError((err as Error).message)

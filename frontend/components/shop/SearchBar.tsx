@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SearchIcon } from './Icons'
+import { API_BASE_URL } from '@/lib/api'
 
 interface Suggestion {
   id: string
@@ -13,7 +14,7 @@ interface Suggestion {
   salePrice?: number | null
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+const API = API_BASE_URL
 
 export function SearchBar() {
   const router = useRouter()
