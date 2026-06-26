@@ -7,6 +7,7 @@ export function TrackProductView({ product }: { product: Product }) {
   const { add } = useRecentlyViewed()
   useEffect(() => {
     add(product)
-  }, [product.id])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id, add])
   return null
 }

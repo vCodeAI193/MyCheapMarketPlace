@@ -1,14 +1,22 @@
 import { Router } from 'express'
+import { z } from 'zod'
+import asyncHandler from 'express-async-handler'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 import { requireAdmin } from '../middleware/admin'
+import { validate } from '../middleware/validate'
 import { PAGINATION } from '../lib/constants'
 
 const router = Router()
 
+const updateUserSchema = z.object({
+  role: z.enum(['USER', 'ADMIN']).optional(),
+  isActive: z.boolean().optional(),
+})
+
 router.use(authenticate, requireAdmin)
 
-router.get('/stats', async (_req, res) => {
+router.get('/stats', asyncHandler(async (_req, res) => {
   const [totalProducts, totalOrders, totalUsers, revenueResult] = await Promise.all([
     prisma.product.count({ where: { isActive: true } }),
     prisma.order.count(),
@@ -34,25 +42,25 @@ router.get('/stats', async (_req, res) => {
     totalRevenue: revenueResult._sum.total ?? 0,
     recentOrders,
   })
-})
+}))
 
-router.get('/products', async (_req, res) => {
+router.get('/products', asyncHandler(async (_req, res) => {
   const products = await prisma.product.findMany({
     include: { category: true },
     orderBy: { createdAt: 'desc' },
   })
   res.json(products)
-})
+}))
 
-router.get('/users', async (_req, res) => {
+router.get('/users', asyncHandler(async (_req, res) => {
   const users = await prisma.user.findMany({
     select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true, _count: { select: { orders: true } } },
     orderBy: { createdAt: 'desc' },
   })
   res.json(users)
-})
+}))
 
-router.put('/users/:id', async (req, res) => {
+router.put('/users/:id', validate(updateUserSchema), asyncHandler(async (req, res) => {
   const { role, isActive } = req.body
   const user = await prisma.user.update({
     where: { id: req.params.id },
@@ -60,10 +68,9 @@ router.put('/users/:id', async (req, res) => {
     select: { id: true, email: true, name: true, role: true, isActive: true },
   })
   res.json(user)
-})
+}))
 
-// Revenue by day (last 30 days)
-router.get('/revenue-chart', async (_req, res) => {
+router.get('/revenue-chart', asyncHandler(async (_req, res) => {
   const since = new Date()
   since.setDate(since.getDate() - (PAGINATION.REVENUE_DAYS - 1))
   since.setHours(0, 0, 0, 0)
@@ -85,6 +92,6 @@ router.get('/revenue-chart', async (_req, res) => {
   }
 
   res.json(Object.entries(byDay).map(([date, revenue]) => ({ date, revenue: Math.round(revenue * 100) / 100 })))
-})
+}))
 
 export default router

@@ -1,7 +1,8 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import asyncHandler from 'express-async-handler'
 import { prisma } from '../lib/prisma'
-import { authenticate, softAuthenticate, AuthRequest } from '../middleware/auth'
+import { softAuthenticate, AuthRequest } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
 const router = Router()
@@ -9,6 +10,10 @@ const router = Router()
 const cartItemSchema = z.object({
   productId: z.string(),
   quantity: z.number().int().min(1),
+})
+
+const updateQuantitySchema = z.object({
+  quantity: z.number().int().min(0),
 })
 
 async function getOrCreateCart(userId?: string, sessionId?: string) {
@@ -23,15 +28,15 @@ async function getOrCreateCart(userId?: string, sessionId?: string) {
   return cart
 }
 
-router.get('/', async (req: AuthRequest, res) => {
+router.get('/', asyncHandler(async (req: AuthRequest, res) => {
   const sessionId = req.headers['x-session-id'] as string | undefined
   const cart = await getOrCreateCart(req.userId, sessionId)
   res.json(cart)
-})
+}))
 
 router.use(softAuthenticate)
 
-router.post('/items', validate(cartItemSchema), async (req: AuthRequest, res) => {
+router.post('/items', validate(cartItemSchema), asyncHandler(async (req: AuthRequest, res) => {
   const { productId, quantity } = req.body
   const sessionId = req.headers['x-session-id'] as string | undefined
 
@@ -59,9 +64,9 @@ router.post('/items', validate(cartItemSchema), async (req: AuthRequest, res) =>
     include: { items: { include: { product: true } } },
   })
   res.json(updated)
-})
+}))
 
-router.put('/items/:productId', async (req: AuthRequest, res) => {
+router.put('/items/:productId', validate(updateQuantitySchema), asyncHandler(async (req: AuthRequest, res) => {
   const { quantity } = req.body
   const sessionId = req.headers['x-session-id'] as string | undefined
   const cart = await getOrCreateCart(req.userId, sessionId)
@@ -82,9 +87,9 @@ router.put('/items/:productId', async (req: AuthRequest, res) => {
     include: { items: { include: { product: true } } },
   })
   res.json(updated)
-})
+}))
 
-router.delete('/items/:productId', async (req: AuthRequest, res) => {
+router.delete('/items/:productId', asyncHandler(async (req: AuthRequest, res) => {
   const sessionId = req.headers['x-session-id'] as string | undefined
   const cart = await getOrCreateCart(req.userId, sessionId)
 
@@ -97,13 +102,13 @@ router.delete('/items/:productId', async (req: AuthRequest, res) => {
     include: { items: { include: { product: true } } },
   })
   res.json(updated)
-})
+}))
 
-router.delete('/', async (req: AuthRequest, res) => {
+router.delete('/', asyncHandler(async (req: AuthRequest, res) => {
   const sessionId = req.headers['x-session-id'] as string | undefined
   const cart = await getOrCreateCart(req.userId, sessionId)
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } })
   res.json({ message: 'Warenkorb geleert' })
-})
+}))
 
 export default router

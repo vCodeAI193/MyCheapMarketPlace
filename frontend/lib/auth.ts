@@ -6,8 +6,10 @@ export async function login(email: string, password: string): Promise<User> {
     '/api/auth/login',
     { email, password }
   )
-  localStorage.setItem('accessToken', data.accessToken)
-  localStorage.setItem('refreshToken', data.refreshToken)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('accessToken', data.accessToken)
+    localStorage.setItem('refreshToken', data.refreshToken)
+  }
   return data.user
 }
 
@@ -16,8 +18,10 @@ export async function register(email: string, password: string, name?: string): 
     '/api/auth/register',
     { email, password, name }
   )
-  localStorage.setItem('accessToken', data.accessToken)
-  localStorage.setItem('refreshToken', data.refreshToken)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('accessToken', data.accessToken)
+    localStorage.setItem('refreshToken', data.refreshToken)
+  }
   return data.user
 }
 

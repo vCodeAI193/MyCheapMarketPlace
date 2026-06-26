@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { z } from 'zod'
+import asyncHandler from 'express-async-handler'
 import { prisma } from '../lib/prisma'
 import { sendMail } from '../lib/mailer'
 import { validate } from '../middleware/validate'
@@ -22,6 +23,10 @@ const loginSchema = z.object({
   password: z.string(),
 })
 
+const updateMeSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+})
+
 function signTokens(userId: string, role: string) {
   const accessToken = jwt.sign({ userId, role }, process.env.JWT_SECRET!, {
     expiresIn: TOKEN_EXPIRY.ACCESS,
@@ -32,7 +37,7 @@ function signTokens(userId: string, role: string) {
   return { accessToken, refreshToken }
 }
 
-router.post('/register', validate(registerSchema), async (req, res) => {
+router.post('/register', validate(registerSchema), asyncHandler(async (req, res) => {
   const { email, password, name } = req.body
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) return res.status(409).json({ error: 'E-Mail bereits vergeben' })
@@ -53,9 +58,9 @@ router.post('/register', validate(registerSchema), async (req, res) => {
   })
 
   res.status(201).json({ user, accessToken, refreshToken })
-})
+}))
 
-router.post('/login', validate(loginSchema), async (req, res) => {
+router.post('/login', validate(loginSchema), asyncHandler(async (req, res) => {
   const { email, password } = req.body
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) return res.status(401).json({ error: 'Ungültige Anmeldedaten' })
@@ -77,7 +82,7 @@ router.post('/login', validate(loginSchema), async (req, res) => {
     accessToken,
     refreshToken,
   })
-})
+}))
 
 router.post('/refresh', async (req, res) => {
   const { refreshToken } = req.body
@@ -110,16 +115,16 @@ router.post('/refresh', async (req, res) => {
   }
 })
 
-router.get('/me', authenticate, async (req: AuthRequest, res) => {
+router.get('/me', authenticate, asyncHandler(async (req: AuthRequest, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.userId },
     select: { id: true, email: true, name: true, role: true, createdAt: true },
   })
   if (!user) return res.status(404).json({ error: 'Nutzer nicht gefunden' })
   res.json(user)
-})
+}))
 
-router.put('/me', authenticate, async (req: AuthRequest, res) => {
+router.put('/me', authenticate, validate(updateMeSchema), asyncHandler(async (req: AuthRequest, res) => {
   const { name } = req.body
   const user = await prisma.user.update({
     where: { id: req.userId },
@@ -127,18 +132,18 @@ router.put('/me', authenticate, async (req: AuthRequest, res) => {
     select: { id: true, email: true, name: true, role: true },
   })
   res.json(user)
-})
+}))
 
-router.post('/logout', authenticate, async (req: AuthRequest, res) => {
+router.post('/logout', authenticate, asyncHandler(async (req: AuthRequest, res) => {
   const { refreshToken } = req.body
   if (refreshToken) {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken, userId: req.userId } })
   }
   res.json({ message: 'Abgemeldet' })
-})
+}))
 
 // Passwort vergessen
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', asyncHandler(async (req, res) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ error: 'E-Mail erforderlich' })
 
@@ -166,10 +171,10 @@ router.post('/forgot-password', async (req, res) => {
   )
 
   res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet.' })
-})
+}))
 
 // Passwort zurücksetzen
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', asyncHandler(async (req, res) => {
   const { token, password } = req.body
   if (!token || !password || password.length < 8) {
     return res.status(400).json({ error: 'Token und Passwort (min. 8 Zeichen) erforderlich' })
@@ -187,6 +192,6 @@ router.post('/reset-password', async (req, res) => {
   await prisma.refreshToken.deleteMany({ where: { userId: reset.userId } })
 
   res.json({ message: 'Passwort erfolgreich zurückgesetzt.' })
-})
+}))
 
 export default router

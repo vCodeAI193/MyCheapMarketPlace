@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import asyncHandler from 'express-async-handler'
 import { prisma } from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
-import { requireAdmin } from '../middleware/admin'
 import { validate } from '../middleware/validate'
 
 const router = Router({ mergeParams: true })
@@ -13,7 +13,7 @@ const reviewSchema = z.object({
 })
 
 // GET /api/products/:id/reviews
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
   const reviews = await prisma.review.findMany({
     where: { productId: req.params.id },
     include: { user: { select: { id: true, name: true } } },
@@ -26,10 +26,10 @@ router.get('/', async (req, res) => {
       : 0
 
   res.json({ reviews, avgRating: Math.round(avg * 10) / 10, count: reviews.length })
-})
+}))
 
 // POST /api/products/:id/reviews
-router.post('/', authenticate, validate(reviewSchema), async (req: AuthRequest, res) => {
+router.post('/', authenticate, validate(reviewSchema), asyncHandler(async (req: AuthRequest, res) => {
   const existing = await prisma.review.findUnique({
     where: { userId_productId: { userId: req.userId!, productId: req.params.id } },
   })
@@ -40,10 +40,10 @@ router.post('/', authenticate, validate(reviewSchema), async (req: AuthRequest, 
     include: { user: { select: { id: true, name: true } } },
   })
   res.status(201).json(review)
-})
+}))
 
 // DELETE /api/reviews/:reviewId  (eigenes oder admin)
-router.delete('/:reviewId', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:reviewId', authenticate, asyncHandler(async (req: AuthRequest, res) => {
   const review = await prisma.review.findUnique({ where: { id: req.params.reviewId } })
   if (!review) return res.status(404).json({ error: 'Bewertung nicht gefunden' })
   if (review.userId !== req.userId && req.userRole !== 'ADMIN') {
@@ -51,6 +51,6 @@ router.delete('/:reviewId', authenticate, async (req: AuthRequest, res) => {
   }
   await prisma.review.delete({ where: { id: req.params.reviewId } })
   res.json({ message: 'Bewertung gelöscht' })
-})
+}))
 
 export default router
