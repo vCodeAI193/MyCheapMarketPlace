@@ -6,7 +6,9 @@ import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
 import { SaleBadge } from './SaleBadge'
 import { StarRating } from './StarRating'
+import { CountdownTimer } from './CountdownTimer'
 import { LOW_STOCK_THRESHOLD } from '@/lib/constants'
+import { useCurrencyStore } from '@/store/currency'
 
 interface Props {
   product: Product
@@ -15,6 +17,7 @@ interface Props {
 export function ProductCard({ product }: Props) {
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const format = useCurrencyStore((s) => s.format)
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -58,11 +61,11 @@ export function ProductCard({ product }: Props) {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-lg font-bold text-primary-600">
-              {Number(displayPrice).toFixed(2)} €
+              {format(Number(displayPrice))}
             </span>
             {onSale && (
               <span className="text-xs text-gray-400 line-through ml-1">
-                {Number(product.price).toFixed(2)} €
+                {format(Number(product.price))}
               </span>
             )}
           </div>
@@ -72,6 +75,11 @@ export function ProductCard({ product }: Props) {
         </div>
         {product.stock > 0 && product.stock < LOW_STOCK_THRESHOLD && (
           <p className="text-xs text-orange-600 mt-1">Nur noch {product.stock} verfügbar</p>
+        )}
+        {onSale && product.saleEndsAt && (
+          <div className="mt-2 scale-90 origin-left">
+            <CountdownTimer endsAt={product.saleEndsAt} />
+          </div>
         )}
       </div>
     </Link>

@@ -94,4 +94,14 @@ router.get('/revenue-chart', asyncHandler(async (_req, res) => {
   res.json(Object.entries(byDay).map(([date, revenue]) => ({ date, revenue: Math.round(revenue * 100) / 100 })))
 }))
 
+router.get('/low-stock', asyncHandler(async (req, res) => {
+  const threshold = Number(req.query.threshold ?? 5)
+  const products = await prisma.product.findMany({
+    where: { isActive: true, stock: { lte: threshold } },
+    include: { category: { select: { name: true } } },
+    orderBy: { stock: 'asc' },
+  })
+  res.json(products)
+}))
+
 export default router

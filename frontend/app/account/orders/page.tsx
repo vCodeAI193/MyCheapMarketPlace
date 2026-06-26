@@ -5,10 +5,13 @@ import { api } from '@/lib/api'
 import { Order } from '@/types'
 import { ORDER_STATUS } from '@/lib/order-status'
 import { AccountTabs } from '@/components/shop/AccountTabs'
+import { useCartStore } from '@/store/cart'
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const addItem = useCartStore((s) => s.addItem)
+  const openCart = useCartStore((s) => s.openCart)
 
   useEffect(() => {
     api.get<Order[]>('/api/orders')
@@ -16,6 +19,13 @@ export default function OrdersPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  function reorder(order: Order) {
+    order.items.forEach((item) => {
+      if (item.product) addItem(item.product, item.quantity)
+    })
+    openCart()
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -64,9 +74,17 @@ export default function OrdersPage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 pt-3 border-t flex justify-between font-bold">
-                  <span>Gesamt</span>
-                  <span>{Number(order.total).toFixed(2)} €</span>
+                <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                  <span className="font-bold">Gesamt</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold">{Number(order.total).toFixed(2)} €</span>
+                    <button
+                      onClick={() => reorder(order)}
+                      className="text-xs text-primary-600 hover:text-primary-800 font-medium border border-primary-200 hover:border-primary-400 px-2.5 py-1 rounded-full transition-colors"
+                    >
+                      Erneut bestellen
+                    </button>
+                  </div>
                 </div>
               </div>
             )

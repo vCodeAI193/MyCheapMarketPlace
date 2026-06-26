@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
-import { Order } from '@/types'
+import { Order, Product } from '@/types'
 import { ORDER_STATUS } from '@/lib/order-status'
+import Link from 'next/link'
 
 interface Stats {
   totalProducts: number
@@ -51,15 +52,18 @@ function RevenueChart({ data }: { data: RevenueDay[] }) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [revenue, setRevenue] = useState<RevenueDay[]>([])
+  const [lowStock, setLowStock] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([
       api.get<Stats>('/api/admin/stats'),
       api.get<RevenueDay[]>('/api/admin/revenue-chart').catch(() => []),
-    ]).then(([s, r]) => {
+      api.get<Product[]>('/api/admin/low-stock').catch(() => []),
+    ]).then(([s, r, ls]) => {
       setStats(s)
       setRevenue(r)
+      setLowStock(ls)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
@@ -101,6 +105,28 @@ export default function AdminDashboard() {
         <h2 className="font-semibold text-lg mb-4">Umsatz — letzte 30 Tage</h2>
         <RevenueChart data={revenue} />
       </div>
+
+      {lowStock.length > 0 && (
+        <div className="card p-6 mb-8 border-l-4 border-orange-400">
+          <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+            ⚠️ Niedriger Lagerbestand
+            <span className="text-sm font-normal text-gray-500">({lowStock.length} {lowStock.length === 1 ? 'Produkt' : 'Produkte'})</span>
+          </h2>
+          <div className="divide-y divide-gray-50">
+            {lowStock.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2">
+                <div>
+                  <Link href={`/admin/products`} className="text-sm font-medium hover:text-primary-600">{p.name}</Link>
+                  <p className="text-xs text-gray-400">{(p as Product & { category?: { name: string } }).category?.name}</p>
+                </div>
+                <span className={`text-sm font-bold ${p.stock === 0 ? 'text-red-600' : 'text-orange-500'}`}>
+                  {p.stock === 0 ? 'Ausverkauft' : `Noch ${p.stock}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card p-6">
         <h2 className="font-semibold text-lg mb-4">Letzte Bestellungen</h2>

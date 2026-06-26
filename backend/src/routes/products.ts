@@ -31,6 +31,20 @@ const productSchema = z.object({
   isActive: z.coerce.boolean().optional(),
 })
 
+// Trending — most reviewed products; must be before /:slug
+router.get('/trending', async (_req, res) => {
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    include: {
+      category: { select: { id: true, name: true, slug: true } },
+      _count: { select: { reviews: true } },
+    },
+    orderBy: { reviews: { _count: 'desc' } },
+    take: 8,
+  })
+  res.json(products)
+})
+
 // Autocomplete — must be before /:slug
 router.get('/autocomplete', async (req, res) => {
   const q = (req.query.q as string ?? '').trim()
@@ -84,6 +98,18 @@ router.get('/', async (req, res) => {
   ])
 
   res.json({ items, total, page: pageNum, totalPages: Math.ceil(total / limitNum) })
+})
+
+router.get('/:slug/related', async (req, res) => {
+  const product = await prisma.product.findUnique({ where: { slug: req.params.slug }, select: { id: true, categoryId: true } })
+  if (!product) return res.status(404).json({ error: 'Produkt nicht gefunden' })
+  const related = await prisma.product.findMany({
+    where: { isActive: true, categoryId: product.categoryId, id: { not: product.id } },
+    include: { category: { select: { id: true, name: true, slug: true } } },
+    take: 4,
+    orderBy: { createdAt: 'desc' },
+  })
+  res.json(related)
 })
 
 router.get('/:slug', async (req, res) => {

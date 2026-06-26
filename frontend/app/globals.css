@@ -6,6 +6,9 @@
   body {
     @apply text-gray-900 bg-gray-50;
   }
+  .dark body {
+    @apply text-gray-100 bg-gray-900;
+  }
 }
 
 @layer components {

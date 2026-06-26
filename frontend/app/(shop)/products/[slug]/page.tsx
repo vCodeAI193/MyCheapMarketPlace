@@ -9,6 +9,7 @@ import { SaleBadge } from '@/components/shop/SaleBadge'
 import { CountdownTimer } from '@/components/shop/CountdownTimer'
 import { WishlistButton } from '@/components/shop/WishlistButton'
 import { RecentlyViewed } from '@/components/shop/RecentlyViewed'
+import { RelatedProducts } from '@/components/shop/RelatedProducts'
 import { TrackProductView } from '@/components/shop/TrackProductView'
 import { API_BASE_URL } from '@/lib/api'
 
@@ -139,6 +140,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
       {/* Reviews */}
       <ReviewList productId={product.id} />
+
+      {/* Related Products */}
+      <RelatedProducts slug={params.slug} />
 
       {/* Recently Viewed */}
       <RecentlyViewed excludeId={product.id} />

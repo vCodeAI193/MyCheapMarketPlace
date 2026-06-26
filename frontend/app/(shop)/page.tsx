@@ -15,6 +15,16 @@ async function getFeaturedProducts(): Promise<Product[]> {
   }
 }
 
+async function getTrendingProducts(): Promise<Product[]> {
+  try {
+    const res = await fetch(`${API}/api/products/trending`, { next: { revalidate: 300 } })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
 async function getCategories(): Promise<Category[]> {
   try {
     const res = await fetch(`${API}/api/categories`, { next: { revalidate: 300 } })
@@ -25,7 +35,7 @@ async function getCategories(): Promise<Category[]> {
 }
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([getFeaturedProducts(), getCategories()])
+  const [products, categories, trending] = await Promise.all([getFeaturedProducts(), getCategories(), getTrendingProducts()])
 
   return (
     <div>
@@ -84,6 +94,23 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Trending / Bestseller */}
+      {trending.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">🔥 Bestseller</h2>
+            <Link href="/products?sort=name" className="text-primary-600 hover:underline font-medium text-sm">
+              Alle anzeigen →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {trending.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Trust bar */}
       <section className="bg-primary-50 border-t border-primary-100">

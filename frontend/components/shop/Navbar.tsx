@@ -4,6 +4,8 @@ import { useCartStore } from '@/store/cart'
 import { useAuthStore } from '@/store/auth'
 import { ShoppingCartIcon, UserIcon } from './Icons'
 import { SearchBar } from './SearchBar'
+import { ThemeToggle } from './ThemeToggle'
+import { CurrencyToggle } from './CurrencyToggle'
 import { CART_BADGE_MAX } from '@/lib/constants'
 
 export function Navbar() {
@@ -27,6 +29,8 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            <CurrencyToggle />
+            <ThemeToggle />
             <button
               onClick={openCart}
               className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"

@@ -41,14 +41,34 @@ export function ReviewList({ productId }: Props) {
 
   return (
     <div className="mt-10 space-y-6">
-      <div className="flex items-center gap-4 border-b pb-4">
-        <h2 className="text-xl font-bold">Bewertungen</h2>
+      <div className="border-b pb-4">
+        <div className="flex items-center gap-4 mb-3">
+          <h2 className="text-xl font-bold">Bewertungen</h2>
+          {data.count > 0 && (
+            <div className="flex items-center gap-2">
+              <StarRating rating={Math.round(data.avgRating)} />
+              <span className="text-sm font-medium text-gray-600">
+                {data.avgRating.toFixed(1)} / 5 ({data.count} {data.count === 1 ? 'Bewertung' : 'Bewertungen'})
+              </span>
+            </div>
+          )}
+        </div>
         {data.count > 0 && (
-          <div className="flex items-center gap-2">
-            <StarRating rating={Math.round(data.avgRating)} />
-            <span className="text-sm font-medium text-gray-600">
-              {data.avgRating.toFixed(1)} / 5 ({data.count} {data.count === 1 ? 'Bewertung' : 'Bewertungen'})
-            </span>
+          <div className="space-y-1 max-w-xs">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = data.reviews.filter((r) => r.rating === star).length
+              const pct = data.count > 0 ? (count / data.count) * 100 : 0
+              return (
+                <div key={star} className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-4 text-right">{star}</span>
+                  <span>★</span>
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-4 text-right">{count}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
+import rateLimit from 'express-rate-limit'
 
 import { ApiError } from './lib/errors'
 import authRouter from './routes/auth'
@@ -16,12 +17,31 @@ import wishlistRouter from './routes/wishlist'
 
 const app = express()
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen, bitte später erneut versuchen.' },
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Login-Versuche, bitte 15 Minuten warten.' },
+})
+
 // Stripe webhook needs raw body
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }))
 
 app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:3000', credentials: true }))
 app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
+app.use('/api', limiter)
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
 
 app.use('/api/auth', authRouter)
 app.use('/api/categories', categoriesRouter)

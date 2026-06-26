@@ -4,9 +4,12 @@ import Image from 'next/image'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/Button'
 import { XIcon, PlusIcon, MinusIcon, TrashIcon } from './Icons'
+import { FREE_SHIPPING_THRESHOLD } from '@/lib/constants'
+import { useCurrencyStore } from '@/store/currency'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, total } = useCartStore()
+  const format = useCurrencyStore((s) => s.format)
 
   if (!isOpen) return null
 
@@ -46,7 +49,7 @@ export function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.product.name}</p>
                     <p className="text-sm text-primary-600 font-semibold">
-                      {Number(item.product.price).toFixed(2)} €
+                      {format(Number(item.product.price))}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <button
@@ -75,9 +78,26 @@ export function CartDrawer() {
             </div>
 
             <div className="p-4 border-t space-y-3">
+              {(() => {
+                const cartTotal = total()
+                const remaining = FREE_SHIPPING_THRESHOLD - cartTotal
+                const pct = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100)
+                return remaining > 0 ? (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Noch <span className="font-semibold text-gray-700">{remaining.toFixed(2)} €</span> bis zum kostenlosen Versand
+                    </p>
+                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-600 font-medium">🎉 Kostenloser Versand!</p>
+                )
+              })()}
               <div className="flex justify-between font-bold text-lg">
                 <span>Gesamt</span>
-                <span>{total().toFixed(2)} €</span>
+                <span>{format(total())}</span>
               </div>
               <Link href="/checkout" onClick={closeCart}>
                 <Button className="w-full">Zur Kasse</Button>

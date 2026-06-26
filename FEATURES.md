@@ -12,7 +12,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 - [ ] Produktvergleich (bis zu 4 Artikel nebeneinander)
 - [ ] Größentabelle / Maßhilfe-Modal
 - [ ] AR-Vorschau ("In meinem Raum ansehen" via WebXR)
-- [ ] Dark Mode (System-Präferenz + manuell umschaltbar)
+- [x] Dark Mode (System-Präferenz + manuell umschaltbar)
 - [ ] Barrierefreiheits-Audit & Verbesserungen (WCAG 2.1 AA)
 - [ ] Skeleton-Loading-Screens statt Spinner
 - [ ] Infinite Scroll / Virtualisierte Produktlisten (react-virtual)
@@ -26,19 +26,19 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 - [ ] Autovervollständigung mit Produktvorschau-Bildern
 - [ ] Erweiterte Filter (Preis-Range, Marke, Bewertung, Farbe, Größe)
 - [ ] Faceted Search (mehrere Filter kombinierbar)
-- [ ] "Ähnliche Produkte"-Empfehlungen (collaborative filtering)
+- [x] "Ähnliche Produkte"-Empfehlungen (gleiche Kategorie)
 - [ ] "Kunden kauften auch"-Sektion auf der Produktdetailseite
 - [ ] Barcode-/QR-Scanner für mobile Produktsuche
 - [ ] Bildsuche (Foto hochladen → ähnliche Produkte finden)
 - [ ] Gespeicherter Suchverlauf pro Nutzer
-- [ ] Trending & Bestseller-Sektion auf der Startseite
+- [x] Trending & Bestseller-Sektion auf der Startseite
 
 ---
 
 ## 3. Nutzer-Account
 
 - [ ] Adressbuch (mehrere Liefer- und Rechnungsadressen verwalten)
-- [ ] Bestellhistorie mit Re-Order-Button
+- [x] Bestellhistorie mit Re-Order-Button
 - [ ] Rückgabe-/Reklamationsantrag online stellen
 - [ ] Treuepunkte-System (Punkte sammeln & einlösen)
 - [ ] Referral-Programm (Freunde einladen, beide bekommen Rabatt)
@@ -61,7 +61,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 - [ ] Guthaben-/Wallet-System (Guthaben aufladen und beim Kauf verwenden)
 - [ ] Geschenkverpackung-Option mit persönlicher Nachricht
 - [ ] MwSt.-Aufschlüsselung im Checkout (Nettobetrag + MwSt. + Bruttobetrag)
-- [ ] Fortschrittsanzeige "Noch X € bis zum kostenlosen Versand"
+- [x] Fortschrittsanzeige "Noch X € bis zum kostenlosen Versand"
 
 ---
 
@@ -71,7 +71,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 - [ ] Digitale Produkte (Download-Link per E-Mail nach Kauf)
 - [ ] Abonnement-Produkte (monatliche / wöchentliche Lieferung)
 - [ ] Produktbündelung (Pakete aus mehreren Produkten mit Rabatt)
-- [ ] Flash Sale / Zeitlich begrenzte Angebote mit Countdown-Timer
+- [x] Flash Sale / Zeitlich begrenzte Angebote mit Countdown-Timer
 - [ ] Pre-Order (Vorbestellung für noch nicht verfügbare Produkte)
 - [ ] Niedrig-Bestand-Badge ("Nur noch 3 verfügbar!")
 - [ ] SKU- und Barcode-Verwaltung im Admin-Panel
@@ -104,7 +104,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 - [ ] Moderations-Queue für neue Bewertungen im Admin-Panel
 - [ ] Antwort des Verkäufers / Admins auf Kundenbewertungen
 - [ ] Bewertungs-Reminder-E-Mail 7 Tage nach Lieferung
-- [ ] Bewertungsverteilung als Histogramm-Balken (1★ bis 5★)
+- [x] Bewertungsverteilung als Histogramm-Balken (1★ bis 5★)
 - [ ] Missbrauchs-Meldung für unangemessene Bewertungen
 - [ ] Bewertungen als CSV exportieren (für Analysen und Backups)
 
@@ -114,7 +114,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 
 - [ ] Erweitertes Analytics-Dashboard: Conversion Rate, AOV, Warenkorbabbrüche
 - [ ] Revenue-Chart mit Vergleichszeitraum (dieser Monat vs. letzter Monat)
-- [ ] Inventar-E-Mail-Alarm (wenn Lagerbestand unter definierten Schwellwert fällt)
+- [x] Inventar-Alarm-Dashboard (Admin-Widget mit Produkten unter Lager-Schwellwert)
 - [ ] Bestellexport als CSV und generierte PDF-Rechnung
 - [ ] Retouren-Management-Workflow mit Statustracking (Angefragt → Genehmigt → Erstattet)
 - [ ] Lieferanten-/Hersteller-Verwaltung im Admin
@@ -129,7 +129,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 
 - [ ] Redis-Cache für Produktlisten, Kategorien und Session-Daten
 - [ ] Bildoptimierung via CDN (Cloudinary oder imgproxy + S3)
-- [ ] Rate-Limiting auf alle API-Endpunkte (express-rate-limit)
+- [x] Rate-Limiting auf alle API-Endpunkte (express-rate-limit)
 - [ ] Webhook-System (ausgehende Webhooks für externe Integrationen)
 - [ ] GraphQL-Endpunkt als Alternative zur REST-API
 - [ ] API-Versionierung (/api/v2) für abwärtskompatible Änderungen
@@ -143,7 +143,7 @@ Status: `- [ ]` = offen · `- [x]` = implementiert
 ## 10. Internationalisierung & Skalierung
 
 - [ ] i18n: Mehrsprachigkeit DE / EN / FR mit next-intl
-- [ ] Währungsanzeige mit tagesaktuellem Wechselkurs (EUR / USD / GBP)
+- [x] Währungsanzeige mit Wechselkurs (EUR / USD / GBP Toggle in Navbar)
 - [ ] Multi-Währungs-Checkout mit Stripe
 - [ ] Länder-spezifische Versandkosten-Konfiguration im Admin
 - [ ] Multi-Vendor-Marktplatz (externe Verkäufer können eigene Produkte anbieten)
